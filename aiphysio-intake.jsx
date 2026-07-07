@@ -31,11 +31,6 @@ const GOALS = [
   "Recover from injury / surgery", "Improve mobility / flexibility", "Sleep better", "General fitness"
 ];
 
-const RED_FLAGS = [
-  "Unexplained weight loss", "Night sweats", "Bladder / bowel changes",
-  "Numbness in groin / inner thigh", "Severe unrelenting pain"
-];
-
 const initialForm = {
   region: [],
   regionDetail: "",
@@ -51,6 +46,11 @@ const initialForm = {
   activityLevel: "",
   redFlags: [],
 };
+
+const RED_FLAGS = [
+  "Unexplained weight loss", "Night sweats", "Bladder / bowel changes",
+  "Numbness in groin / inner thigh", "Severe unrelenting pain"
+];
 
 export default function AIPhysioIntake() {
   const [step, setStep] = useState(0);
@@ -70,53 +70,53 @@ export default function AIPhysioIntake() {
 
   const set = (field, value) => setForm(f => ({ ...f, [field]: value }));
 
-  const buildPrompt = () => {
-    return "You are an expert physiotherapist AI assistant for AIphysio. Based on the patient intake below, produce:\n\n1. A brief clinical assessment summary (2-3 sentences, professional tone)\n2. A personalised home exercise program (4-6 exercises with sets, reps, frequency, and clear instructions)\n3. Self-management education (3-4 key points about their condition and recovery)\n4. A clear disclaimer that this is general wellness guidance, not a substitute for in-person assessment\n\nIMPORTANT: Write in plain, encouraging language the patient can understand. Format with clear headings.\n\n--- PATIENT INTAKE ---\nBody region: " + form.region.join(", ") + "\nAdditional detail: " + (form.regionDetail || "none") + "\nPain score (0-10): " + form.painScore + "\nPain behaviour: " + form.painBehaviour.join(", ") + "\nDuration: " + form.duration + "\nPrevious treatment: " + (form.previousTreatment || "none") + "\nAggravating factors: " + form.aggravating.join(", ") + "\nRelieving factors: " + form.relieving.join(", ") + "\nFunctional limitations: " + (form.functionalLimits || "none stated") + "\nGoals: " + form.goals.join(", ") + "\nAge: " + (form.age || "not provided") + "\nActivity level: " + (form.activityLevel || "not provided") + "\nRed flags present: " + (form.redFlags.length > 0 ? form.redFlags.join(", ") : "none");
-  };
+  const buildPrompt = () => `
+You are an expert physiotherapist AI assistant for AIphysio. Based on the patient intake below, produce:
+
+1. A brief clinical assessment summary (2–3 sentences, professional tone)
+2. A personalised home exercise program (4–6 exercises with sets, reps, frequency, and clear instructions)
+3. Self-management education (3–4 key points about their condition and recovery)
+4. A clear disclaimer that this is general wellness guidance, not a substitute for in-person assessment
+
+IMPORTANT: Write in plain, encouraging language the patient can understand. Format with clear headings.
+
+--- PATIENT INTAKE ---
+Body region: ${form.region.join(", ")}
+Additional detail: ${form.regionDetail || "none"}
+Pain score (0–10): ${form.painScore}
+Pain behaviour: ${form.painBehaviour.join(", ")}
+Duration: ${form.duration}
+Previous treatment: ${form.previousTreatment || "none"}
+Aggravating factors: ${form.aggravating.join(", ")}
+Relieving factors: ${form.relieving.join(", ")}
+Functional limitations: ${form.functionalLimits || "none stated"}
+Goals: ${form.goals.join(", ")}
+Age: ${form.age || "not provided"}
+Activity level: ${form.activityLevel || "not provided"}
+Red flags present: ${form.redFlags.length > 0 ? form.redFlags.join(", ") : "none"}
+
+${form.redFlags.length > 0 ? "⚠️ RED FLAGS PRESENT: Strongly recommend this patient seek urgent in-person medical assessment. Provide only general advice and emphasise urgency of professional review." : ""}
+`;
 
   const submit = async () => {
     setLoading(true);
     setError(null);
-    setResult(null);
     try {
       const response = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          // Use environment variable for the API key. Replace with your key if needed.
-          "x-api-key": process.env.REACT_APP_ANTHROPIC_API_KEY || "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",
-          "anthropic-version": "2023-06-01",
-          "anthropic-dangerous-direct-browser-access": "true",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "claude-sonnet-4-6",
+          model: "claude-sonnet-4-20250514",
           max_tokens: 1000,
           messages: [{ role: "user", content: buildPrompt() }],
         }),
       });
-
       const data = await response.json();
-      console.log("API response:", JSON.stringify(data));
-
-      if (data.error) {
-        setError("API error: " + data.error.message);
-        return;
-      }
-
-      const text = data.content && data.content.length > 0
-        ? data.content.map(b => b.text || "").join("")
-        : "";
-
-      if (!text) {
-        setError("No response received. Check console for details.");
-        return;
-      }
-
+      const text = data.content?.map(b => b.text || "").join("") || "";
       setResult(text);
       setStep(5);
     } catch (e) {
-      console.log("Fetch error:", e.message);
-      setError("Connection error: " + e.message);
+      setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -135,7 +135,7 @@ export default function AIPhysioIntake() {
       fontFamily: "'DM Sans', sans-serif",
       color: "#e8e6e1",
     }}>
-      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=Syne:wght@600;700&display=swap" rel="stylesheet" />
+      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=Syne:wght@600;700&display=swap" rel="stylesheet"/>
 
       {/* Header */}
       <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
@@ -158,7 +158,7 @@ export default function AIPhysioIntake() {
             <span>{progress}%</span>
           </div>
           <div style={{ height: "3px", background: "#1e2530", borderRadius: "2px" }}>
-            <div style={{ height: "100%", width: progress + "%", background: "#4ade80", borderRadius: "2px", transition: "width 0.4s ease" }} />
+            <div style={{ height: "100%", width: `${progress}%`, background: "#4ade80", borderRadius: "2px", transition: "width 0.4s ease" }}/>
           </div>
         </div>
       )}
@@ -223,10 +223,10 @@ export default function AIPhysioIntake() {
             <select value={form.duration} onChange={e => set("duration", e.target.value)} style={selectStyle}>
               <option value="">Select duration</option>
               <option>Less than 1 week</option>
-              <option>1-4 weeks</option>
-              <option>1-3 months</option>
-              <option>3-6 months</option>
-              <option>6-12 months</option>
+              <option>1–4 weeks</option>
+              <option>1–3 months</option>
+              <option>3–6 months</option>
+              <option>6–12 months</option>
               <option>More than 1 year</option>
             </select>
 
@@ -260,7 +260,7 @@ export default function AIPhysioIntake() {
             />
 
             <label style={{ ...labelStyle, color: "#f87171", marginTop: "1.5rem" }}>
-              Safety screen — do any of these apply? (select if yes)
+              ⚠️ Safety screen — do any of these apply? (select if yes)
             </label>
             <div style={{ display: "flex", flexDirection: "column", gap: "8px", margin: "0.75rem 0 1.5rem" }}>
               {RED_FLAGS.map(r => (
@@ -280,9 +280,9 @@ export default function AIPhysioIntake() {
           <div>
             <h2 style={headingStyle}>How does it affect you?</h2>
 
-            <label style={labelStyle}>What cannot you do (or find hard to do) because of this?</label>
+            <label style={labelStyle}>What can't you do (or find hard to do) because of this?</label>
             <textarea
-              placeholder="e.g. Cannot sit at desk for more than 30 mins, Cannot run, Hard to sleep on side"
+              placeholder="e.g. 'Can't sit at my desk for more than 30 mins', 'Can't run', 'Hard to sleep on my side'"
               value={form.functionalLimits}
               onChange={e => set("functionalLimits", e.target.value)}
               style={textareaStyle}
@@ -299,7 +299,7 @@ export default function AIPhysioIntake() {
               <option value="">Select</option>
               <option>Sedentary (mostly sitting)</option>
               <option>Lightly active (occasional walking / movement)</option>
-              <option>Moderately active (exercise 2-3x/week)</option>
+              <option>Moderately active (exercise 2–3x/week)</option>
               <option>Very active (exercise 4+ times/week)</option>
               <option>Athlete / competitive sport</option>
             </select>
@@ -321,11 +321,8 @@ export default function AIPhysioIntake() {
               ))}
             </div>
 
-            <NavRow
-              onBack={() => setStep(3)}
-              nextLabel={loading ? "Generating..." : "Generate my program"}
-              onNext={submit}
-              nextDisabled={form.goals.length === 0 || loading}
+            <NavRow onBack={() => setStep(3)} nextLabel={loading ? "Generating…" : "Generate my program →"}
+              onNext={submit} nextDisabled={form.goals.length === 0 || loading}
               nextStyle={{ background: "#4ade80", color: "#0d1117", fontWeight: 600 }}
             />
             {error && <p style={{ color: "#f87171", fontSize: "13px", marginTop: "1rem" }}>{error}</p>}
@@ -365,14 +362,11 @@ export default function AIPhysioIntake() {
         {/* Loading state */}
         {loading && (
           <div style={{ textAlign: "center", padding: "2rem 0", color: "#4ade80" }}>
-            <div style={{ fontSize: "28px", animation: "spin 1.2s linear infinite", display: "inline-block" }}>
-              &#8635;
-            </div>
-            <p style={{ marginTop: "12px", fontSize: "14px", color: "#7a7975" }}>Generating your personalised program...</p>
+            <div style={{ fontSize: "28px", animation: "spin 1.2s linear infinite", display: "inline-block" }}>⟳</div>
+            <p style={{ marginTop: "12px", fontSize: "14px", color: "#7a7975" }}>Generating your personalised program…</p>
             <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
           </div>
         )}
-
       </div>
 
       {/* Disclaimer */}
@@ -383,6 +377,7 @@ export default function AIPhysioIntake() {
   );
 }
 
+// ── Shared styles ──────────────────────────────────────────────
 const headingStyle = {
   fontFamily: "'Syne', sans-serif",
   fontSize: "1.3rem",
@@ -409,7 +404,7 @@ const labelStyle = {
 
 const chipStyle = (active) => ({
   background: active ? "#162a1e" : "#0d1117",
-  border: "1px solid " + (active ? "#4ade80" : "#1e2a38"),
+  border: `1px solid ${active ? "#4ade80" : "#1e2a38"}`,
   borderRadius: "10px",
   padding: "12px 14px",
   cursor: "pointer",
@@ -420,7 +415,7 @@ const chipStyle = (active) => ({
 
 const tagStyle = (active) => ({
   background: active ? "#162a1e" : "transparent",
-  border: "1px solid " + (active ? "#4ade80" : "#1e2a38"),
+  border: `1px solid ${active ? "#4ade80" : "#1e2a38"}`,
   borderRadius: "20px",
   padding: "6px 14px",
   cursor: "pointer",
@@ -453,13 +448,12 @@ const selectStyle = {
   cursor: "pointer",
 };
 
-function NavRow({ onBack, onNext, nextDisabled, nextLabel, nextStyle }) {
-  const label = nextLabel || "Next";
-  const extraStyle = nextStyle || {};
+// ── Nav row ────────────────────────────────────────────────────
+function NavRow({ onBack, onNext, nextDisabled, nextLabel = "Next →", nextStyle = {} }) {
   return (
     <div style={{ display: "flex", justifyContent: "space-between", marginTop: "2rem", gap: "10px" }}>
       {onBack ? (
-        <button onClick={onBack} style={{ ...tagStyle(false), padding: "10px 20px" }}>Back</button>
+        <button onClick={onBack} style={{ ...tagStyle(false), padding: "10px 20px" }}>← Back</button>
       ) : <span />}
       <button
         onClick={onNext}
@@ -475,10 +469,10 @@ function NavRow({ onBack, onNext, nextDisabled, nextLabel, nextStyle }) {
           fontWeight: 500,
           opacity: nextDisabled ? 0.5 : 1,
           transition: "all 0.15s",
-          ...extraStyle,
+          ...nextStyle,
         }}
       >
-        {label}
+        {nextLabel}
       </button>
     </div>
   );

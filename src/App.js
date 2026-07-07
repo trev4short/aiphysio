@@ -84,7 +84,7 @@ export default function AIPhysioIntake() {
         headers: {
           "Content-Type": "application/json",
           // Use environment variable for the API key. Replace with your key if needed.
-          "x-api-key": process.env.REACT_APP_ANTHROPIC_API_KEY || "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",
+          "x-api-key": process.env.REACT_APP_ANTHROPIC_API_KEY
           "anthropic-version": "2023-06-01",
           "anthropic-dangerous-direct-browser-access": "true",
         },

@@ -79,20 +79,17 @@ export default function AIPhysioIntake() {
     setError(null);
     setResult(null);
     try {
-     const response = await fetch("/api/claude", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({
-    model: "claude-sonnet-4-6",
-    max_tokens: 1000,
-    messages: [{ role: "user", content: buildPrompt() }],
-  }),
-});
+      const response = await fetch("/api/claude", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-6",
+          max_tokens: 1000,
+          messages: [{ role: "user", content: buildPrompt() }],
+        }),
+      });
 
       const data = await response.json();
-      console.log("API response:", JSON.stringify(data));
 
       if (data.error) {
         setError("API error: " + data.error.message);
@@ -104,14 +101,13 @@ export default function AIPhysioIntake() {
         : "";
 
       if (!text) {
-        setError("No response received. Check console for details.");
+        setError("No response received. Please try again.");
         return;
       }
 
       setResult(text);
       setStep(5);
     } catch (e) {
-      console.log("Fetch error:", e.message);
       setError("Connection error: " + e.message);
     } finally {
       setLoading(false);
@@ -127,28 +123,34 @@ export default function AIPhysioIntake() {
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
-      padding: "2rem 1rem",
+      padding: "2rem 16px",
       fontFamily: "'DM Sans', sans-serif",
       color: "#e8e6e1",
+      boxSizing: "border-box",
+      overflowX: "hidden",
     }}>
+      <style>{`
+        * { box-sizing: border-box; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+      `}</style>
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=Syne:wght@600;700&display=swap" rel="stylesheet" />
 
       {/* Header */}
-      <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
+      <div style={{ textAlign: "center", marginBottom: "2rem", width: "100%" }}>
         <div style={{ fontSize: "11px", letterSpacing: "0.2em", color: "#4ade80", textTransform: "uppercase", marginBottom: "6px", fontWeight: 500 }}>
           AIphysio
         </div>
-        <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(1.6rem, 4vw, 2.4rem)", fontWeight: 700, margin: 0, lineHeight: 1.1, color: "#f0ede8" }}>
+        <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(1.4rem, 6vw, 2.4rem)", fontWeight: 700, margin: 0, lineHeight: 1.1, color: "#f0ede8" }}>
           Movement Assessment
         </h1>
-        <p style={{ color: "#7a7975", fontSize: "14px", marginTop: "8px", maxWidth: "360px" }}>
+        <p style={{ color: "#7a7975", fontSize: "14px", marginTop: "8px", maxWidth: "340px", margin: "8px auto 0" }}>
           Tell us about your pain and goals — your personalised program takes about 2 minutes to complete.
         </p>
       </div>
 
       {/* Progress bar */}
       {step < 5 && (
-        <div style={{ width: "100%", maxWidth: "560px", marginBottom: "2rem" }}>
+        <div style={{ width: "100%", maxWidth: "560px", marginBottom: "1.5rem" }}>
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", color: "#7a7975", marginBottom: "6px" }}>
             <span>Step {step + 1} of {STEPS.length}</span>
             <span>{progress}%</span>
@@ -161,11 +163,12 @@ export default function AIPhysioIntake() {
 
       {/* Card */}
       <div style={{
-        width: "100%", maxWidth: "560px",
+        width: "100%",
+        maxWidth: "560px",
         background: "#141920",
         border: "1px solid #1e2a38",
         borderRadius: "16px",
-        padding: "2rem",
+        padding: "clamp(1rem, 4vw, 2rem)",
       }}>
 
         {/* STEP 0 — Body region */}
@@ -173,7 +176,7 @@ export default function AIPhysioIntake() {
           <div>
             <h2 style={headingStyle}>Where is your pain or problem?</h2>
             <p style={subStyle}>Select all that apply</p>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", margin: "1.5rem 0" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", margin: "1.25rem 0" }}>
               {BODY_REGIONS.map(r => (
                 <button key={r.id} onClick={() => toggle("region", r.id)} style={chipStyle(form.region.includes(r.id))}>
                   <span style={{ fontWeight: 500, fontSize: "14px" }}>{r.label}</span>
@@ -182,7 +185,7 @@ export default function AIPhysioIntake() {
               ))}
             </div>
             <textarea
-              placeholder="Any additional detail? (e.g. 'left knee', 'both shoulders')"
+              placeholder="Any additional detail? (e.g. left knee, both shoulders)"
               value={form.regionDetail}
               onChange={e => set("regionDetail", e.target.value)}
               style={textareaStyle}
@@ -256,7 +259,7 @@ export default function AIPhysioIntake() {
             />
 
             <label style={{ ...labelStyle, color: "#f87171", marginTop: "1.5rem" }}>
-              Safety screen — do any of these apply? (select if yes)
+              Safety screen — do any of these apply?
             </label>
             <div style={{ display: "flex", flexDirection: "column", gap: "8px", margin: "0.75rem 0 1.5rem" }}>
               {RED_FLAGS.map(r => (
@@ -276,7 +279,7 @@ export default function AIPhysioIntake() {
           <div>
             <h2 style={headingStyle}>How does it affect you?</h2>
 
-            <label style={labelStyle}>What cannot you do (or find hard to do) because of this?</label>
+            <label style={labelStyle}>What is hard to do because of this?</label>
             <textarea
               placeholder="e.g. Cannot sit at desk for more than 30 mins, Cannot run, Hard to sleep on side"
               value={form.functionalLimits}
@@ -294,7 +297,7 @@ export default function AIPhysioIntake() {
             <select value={form.activityLevel} onChange={e => set("activityLevel", e.target.value)} style={selectStyle}>
               <option value="">Select</option>
               <option>Sedentary (mostly sitting)</option>
-              <option>Lightly active (occasional walking / movement)</option>
+              <option>Lightly active (occasional walking)</option>
               <option>Moderately active (exercise 2-3x/week)</option>
               <option>Very active (exercise 4+ times/week)</option>
               <option>Athlete / competitive sport</option>
@@ -308,8 +311,8 @@ export default function AIPhysioIntake() {
         {step === 4 && (
           <div>
             <h2 style={headingStyle}>What are your goals?</h2>
-            <p style={subStyle}>What would a successful outcome look like for you?</p>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", margin: "1.5rem 0" }}>
+            <p style={subStyle}>What would a successful outcome look like?</p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", margin: "1.25rem 0" }}>
               {GOALS.map(g => (
                 <button key={g} onClick={() => toggle("goals", g)} style={chipStyle(form.goals.includes(g))}>
                   <span style={{ fontSize: "13px" }}>{g}</span>
@@ -339,12 +342,11 @@ export default function AIPhysioIntake() {
               background: "#0d1117",
               border: "1px solid #1e2a38",
               borderRadius: "10px",
-              padding: "1.5rem",
+              padding: "1.25rem",
               fontSize: "14px",
               lineHeight: "1.8",
               color: "#c9c6c0",
               whiteSpace: "pre-wrap",
-              maxHeight: "420px",
               overflowY: "auto",
             }}>
               {result}
@@ -365,14 +367,13 @@ export default function AIPhysioIntake() {
               &#8635;
             </div>
             <p style={{ marginTop: "12px", fontSize: "14px", color: "#7a7975" }}>Generating your personalised program...</p>
-            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
           </div>
         )}
 
       </div>
 
       {/* Disclaimer */}
-      <p style={{ maxWidth: "560px", textAlign: "center", fontSize: "11px", color: "#4a4d52", marginTop: "1.5rem", lineHeight: 1.6 }}>
+      <p style={{ maxWidth: "560px", width: "100%", textAlign: "center", fontSize: "11px", color: "#4a4d52", margin: "1.5rem auto 2rem", lineHeight: 1.6, padding: "0 16px" }}>
         AIphysio provides general wellness and exercise guidance only. It is not a substitute for professional physiotherapy assessment or medical advice. If you have red flag symptoms, seek urgent medical attention.
       </p>
     </div>
@@ -381,7 +382,7 @@ export default function AIPhysioIntake() {
 
 const headingStyle = {
   fontFamily: "'Syne', sans-serif",
-  fontSize: "1.3rem",
+  fontSize: "1.25rem",
   fontWeight: 700,
   color: "#f0ede8",
   margin: "0 0 4px",
@@ -390,12 +391,12 @@ const headingStyle = {
 const subStyle = {
   fontSize: "13px",
   color: "#7a7975",
-  margin: "0 0 1rem",
+  margin: "0 0 0.5rem",
 };
 
 const labelStyle = {
   display: "block",
-  fontSize: "12px",
+  fontSize: "11px",
   fontWeight: 500,
   color: "#9ca3af",
   letterSpacing: "0.06em",
@@ -407,18 +408,19 @@ const chipStyle = (active) => ({
   background: active ? "#162a1e" : "#0d1117",
   border: "1px solid " + (active ? "#4ade80" : "#1e2a38"),
   borderRadius: "10px",
-  padding: "12px 14px",
+  padding: "10px 12px",
   cursor: "pointer",
   textAlign: "left",
   color: active ? "#4ade80" : "#9ca3af",
   transition: "all 0.15s",
+  width: "100%",
 });
 
 const tagStyle = (active) => ({
   background: active ? "#162a1e" : "transparent",
   border: "1px solid " + (active ? "#4ade80" : "#1e2a38"),
   borderRadius: "20px",
-  padding: "6px 14px",
+  padding: "6px 12px",
   cursor: "pointer",
   fontSize: "13px",
   color: active ? "#4ade80" : "#9ca3af",
@@ -432,7 +434,7 @@ const inputStyle = {
   borderRadius: "8px",
   padding: "10px 14px",
   color: "#e8e6e1",
-  fontSize: "14px",
+  fontSize: "16px",
   outline: "none",
   boxSizing: "border-box",
 };
@@ -453,7 +455,7 @@ function NavRow({ onBack, onNext, nextDisabled, nextLabel, nextStyle }) {
   const label = nextLabel || "Next";
   const extraStyle = nextStyle || {};
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", marginTop: "2rem", gap: "10px" }}>
+    <div style={{ display: "flex", justifyContent: "space-between", marginTop: "1.5rem", gap: "10px" }}>
       {onBack ? (
         <button onClick={onBack} style={{ ...tagStyle(false), padding: "10px 20px" }}>Back</button>
       ) : <span />}

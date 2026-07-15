@@ -1,4 +1,3 @@
-import React from "react";
 import LandingPage from "./Landing";
 import AIPhysioIntake from "./Intake";
 
